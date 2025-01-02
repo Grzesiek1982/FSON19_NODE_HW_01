@@ -21,21 +21,59 @@ async function getContactById(contactId) {
   return contacts.find((contact) => contact.id === contactId) || null;
 }
 
-async function removeContact(contactId) {
-  const contacts = await listContacts();
-  const updatedContacts = contacts.filter(
-    (contact) => contact.id !== contactId
-  );
-  await fs.writeFile(contactsPath, JSON.stringify(updatedContacts, null, 2));
-  return updatedContacts;
+function removeContact(contactId) {
+  fs.readFile(contactsPath, "utf8", (err, data) => {
+    if (err) {
+      console.error("Błąd odczytu pliku:", err);
+      return;
+    }
+
+    const contacts = JSON.parse(data);
+
+    const updatedContacts = contacts.filter(
+      (contact) => contact.id !== contactId
+    );
+
+    fs.writeFile(
+      contactsPath,
+      JSON.stringify(updatedContacts, null, 2),
+      (err) => {
+        if (err) {
+          console.error("Błąd zapisu pliku:", err);
+          return;
+        }
+        console.log("Kontakt został usunięty");
+      }
+    );
+  });
 }
 
-async function addContact(name, email, phone) {
-  const contacts = await listContacts();
-  const newContact = { id: String(contacts.length + 1), name, email, phone };
-  contacts.push(newContact);
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-  return newContact;
+function addContact(name, email, phone) {
+  const newContact = {
+    id: Date.now().toString(),
+    name,
+    email,
+    phone,
+  };
+
+  fs.readFile(contactsPath, "utf8", (err, data) => {
+    if (err) {
+      console.error("Błąd odczytu pliku:", err);
+      return;
+    }
+
+    const contacts = JSON.parse(data);
+
+    contacts.push(newContact);
+
+    fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2), (err) => {
+      if (err) {
+        console.error("Błąd zapisu pliku:", err);
+        return;
+      }
+      console.log("Kontakt został dodany");
+    });
+  });
 }
 
 module.exports = {
